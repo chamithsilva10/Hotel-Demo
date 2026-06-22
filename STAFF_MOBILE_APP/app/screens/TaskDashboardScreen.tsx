@@ -1,0 +1,306 @@
+import React, { useState } from 'react'
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+} from 'react-native'
+
+export default function TaskDashboardScreen({ navigation }: any) {
+  const tasks = [
+    {
+      id: 1,
+      room: '301',
+      service: 'Room Service',
+      guest: 'John Smith',
+      priority: 'Critical',
+      description: 'Air conditioning not working',
+      status: 'pending',
+      time: '10:00 AM',
+    },
+    {
+      id: 2,
+      room: '415',
+      service: 'Housekeeping',
+      guest: 'Sarah Chen',
+      priority: 'Medium',
+      description: 'Extra towels and sheets needed',
+      status: 'accepted',
+      time: '11:30 AM',
+    },
+    {
+      id: 3,
+      room: '502',
+      service: 'Maintenance',
+      guest: 'James Wilson',
+      priority: 'Low',
+      description: 'Bathroom sink dripping',
+      status: 'in-progress',
+      time: '2:00 PM',
+    },
+  ]
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'Critical':
+        return '#ef4444'
+      case 'Medium':
+        return '#f59e0b'
+      case 'Low':
+        return '#10b981'
+      default:
+        return '#3b82f6'
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return '#64748b'
+      case 'accepted':
+        return '#3b82f6'
+      case 'in-progress':
+        return '#a855f7'
+      case 'completed':
+        return '#10b981'
+      default:
+        return '#64748b'
+    }
+  }
+
+  const renderTaskCard = ({ item }: any) => (
+    <TouchableOpacity
+      style={styles.taskCard}
+      onPress={() =>
+        navigation.navigate('TaskDetail', { task: item })
+      }
+    >
+      <View style={styles.taskHeader}>
+        <View>
+          <Text style={styles.roomNumber}>Room {item.room}</Text>
+          <Text style={styles.service}>{item.service}</Text>
+        </View>
+        <View
+          style={[
+            styles.priorityBadge,
+            { backgroundColor: getPriorityColor(item.priority) + '30' },
+          ]}
+        >
+          <Text style={[styles.priorityText, { color: getPriorityColor(item.priority) }]}>
+            {item.priority}
+          </Text>
+        </View>
+      </View>
+
+      <Text style={styles.guest}>{item.guest}</Text>
+      <Text style={styles.description}>{item.description}</Text>
+
+      <View style={styles.taskFooter}>
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: getStatusColor(item.status) + '20' },
+          ]}
+        >
+          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+            {item.status}
+          </Text>
+        </View>
+        <Text style={styles.time}>{item.time}</Text>
+      </View>
+    </TouchableOpacity>
+  )
+
+  const stats = [
+    { label: 'Total Tasks', value: '12', color: '#3b82f6' },
+    { label: 'In Progress', value: '3', color: '#a855f7' },
+    { label: 'Completed', value: '7', color: '#10b981' },
+    { label: 'Critical', value: '1', color: '#ef4444' },
+  ]
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Tasks</Text>
+        <Text style={styles.headerSubtitle}>Welcome back, Mike Johnson</Text>
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.statsScroll}
+        contentContainerStyle={styles.statsContainer}
+      >
+        {stats.map((stat, idx) => (
+          <View key={idx} style={[styles.statCard, { borderLeftColor: stat.color }]}>
+            <Text style={styles.statValue}>{stat.value}</Text>
+            <Text style={styles.statLabel}>{stat.label}</Text>
+          </View>
+        ))}
+      </ScrollView>
+
+      <View style={styles.filterContainer}>
+        <TouchableOpacity style={styles.filterButton}>
+          <Text style={styles.filterButtonText}>All Tasks</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.filterButton, styles.filterButtonInactive]}>
+          <Text style={styles.filterButtonTextInactive}>Pending</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.filterButton, styles.filterButtonInactive]}>
+          <Text style={styles.filterButtonTextInactive}>Completed</Text>
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        data={tasks}
+        renderItem={renderTaskCard}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.listContainer}
+        scrollEnabled={false}
+      />
+    </View>
+  )
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+    paddingTop: 50,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1e293b',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#f8fafc',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#94a3b8',
+    marginTop: 4,
+  },
+  statsScroll: {
+    paddingVertical: 12,
+  },
+  statsContainer: {
+    paddingHorizontal: 8,
+    gap: 12,
+  },
+  statCard: {
+    backgroundColor: '#1e293b',
+    borderLeftWidth: 4,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    minWidth: 140,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#f8fafc',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginTop: 4,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  filterButton: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  filterButtonInactive: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  filterButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  filterButtonTextInactive: {
+    color: '#94a3b8',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  listContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  taskCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  taskHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  roomNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#f8fafc',
+  },
+  service: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginTop: 2,
+  },
+  priorityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  priorityText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  guest: {
+    fontSize: 14,
+    color: '#e2e8f0',
+    marginBottom: 6,
+  },
+  description: {
+    fontSize: 13,
+    color: '#cbd5e1',
+    marginBottom: 12,
+  },
+  taskFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  time: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+})

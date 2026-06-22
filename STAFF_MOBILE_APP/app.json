@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Hotel Staff App",
+    "slug": "hotel-staff-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTabletMode": true,
+      "bundleIdentifier": "com.hotelservice.staffapp"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f172a"
+      },
+      "package": "com.hotelservice.staffapp"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icons": [
+            "./assets/notification-icon.png"
+          ]
+        }
+      ]
+    ]
+  }
+}
