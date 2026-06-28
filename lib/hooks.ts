@@ -6,7 +6,7 @@ export function useRequests() {
   const { data, error, isLoading, mutate } = useSWR('/api/requests', fetcher)
 
   return {
-    requests: data || [],
+    requests: Array.isArray(data) ? data : [],
     isLoading,
     error,
     mutate,
@@ -17,7 +17,7 @@ export function useGuests() {
   const { data, error, isLoading, mutate } = useSWR('/api/guests', fetcher)
 
   return {
-    guests: data || [],
+    guests: Array.isArray(data) ? data : [],
     isLoading,
     error,
     mutate,
@@ -28,7 +28,7 @@ export function useStaff() {
   const { data, error, isLoading, mutate } = useSWR('/api/staff', fetcher)
 
   return {
-    staff: data || [],
+    staff: Array.isArray(data) ? data : [],
     isLoading,
     error,
     mutate,

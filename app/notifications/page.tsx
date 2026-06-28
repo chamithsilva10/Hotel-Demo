@@ -115,6 +115,7 @@ export default function NotificationsPage() {
                       <input
                         type="checkbox"
                         checked={setting.enabled}
+                        readOnly
                         className="w-5 h-5 rounded accent-blue-500"
                       />
                     </div>

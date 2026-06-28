@@ -120,6 +120,9 @@ export default function SettingsPage() {
                           <input
                             type="checkbox"
                             checked={service.enabled}
+                            onChange={() => setServices(services.map(s =>
+                              s.id === service.id ? { ...s, enabled: !s.enabled } : s
+                            ))}
                             className="w-5 h-5 rounded accent-blue-500"
                           />
                           <div>
@@ -198,7 +201,7 @@ export default function SettingsPage() {
                       <h4 className="font-semibold mb-3">Two-Factor Authentication</h4>
                       <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
                         <p className="text-sm">2FA enabled for admin accounts</p>
-                        <input type="checkbox" checked className="w-5 h-5 rounded accent-blue-500" />
+                        <input type="checkbox" checked readOnly className="w-5 h-5 rounded accent-blue-500" />
                       </div>
                     </div>
                   </div>
