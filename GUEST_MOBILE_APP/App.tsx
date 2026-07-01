@@ -89,6 +89,12 @@ export default function App() {
       }
     });
 
+    // Listen for newly created requests from other connected roles
+    socketService.onRequestCreated((data) => {
+      console.log('Request created:', data);
+      updateRequest(data.id, data as any);
+    });
+
     // Listen for staff assignment
     socketService.onRequestAssigned((data) => {
       console.log('Request assigned:', data);
