@@ -617,7 +617,7 @@ async function createRequest(io, payload, actor = {}) {
 
   const department = departmentForService(request.type)
   if (request.priority === 'Critical' || request.priority === 'High') {
-    await createNotification({
+    const notification = await createNotification({
       recipientType: 'staff',
       recipientId: null,
       type: 'critical',
@@ -626,6 +626,7 @@ async function createRequest(io, payload, actor = {}) {
       icon: 'alert-circle',
       priority: request.priority,
     })
+    io.emit('notification:new', notification)
     io.to(`department-${department}`).emit('notification:new', {
       id: String(request.id),
       type: 'critical',
