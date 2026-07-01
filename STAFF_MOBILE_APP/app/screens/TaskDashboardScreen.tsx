@@ -16,10 +16,21 @@ export default function TaskDashboardScreen({ navigation }: any) {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
+  const normalizeTask = (request: any) => ({
+    id: request.id,
+    room: request.roomNumber,
+    service: request.type,
+    guest: request.guestName || 'Guest',
+    priority: request.priority || 'Medium',
+    description: request.description || '',
+    status: request.status || 'pending',
+    time: request.createdAt ? new Date(request.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now',
+  })
+
   const loadTasks = async () => {
     try {
       const response = await apiClient.getRequests()
-      setTasks(Array.isArray(response) ? response : [])
+      setTasks(Array.isArray(response) ? response.map(normalizeTask) : [])
     } catch (error) {
       console.error('Failed to load staff tasks:', error)
     } finally {
@@ -134,7 +145,7 @@ export default function TaskDashboardScreen({ navigation }: any) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Tasks</Text>
-        <Text style={styles.headerSubtitle}>Welcome back, Mike Johnson</Text>
+        <Text style={styles.headerSubtitle}>Live hotel requests and assignments</Text>
       </View>
 
       <ScrollView

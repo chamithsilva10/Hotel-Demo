@@ -1,12 +1,51 @@
-import React from 'react'
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native'
+import { apiClient } from '../utils/api'
+import { socketService } from '../utils/socket'
 
 export default function MessagesScreen() {
-  const conversations = [
-    { id: 1, name: 'Manager - Task Updates', lastMsg: 'New task assigned to you', time: '2m ago' },
-    { id: 2, name: 'Guest (Room 301)', lastMsg: 'When will service arrive?', time: '15m ago' },
-    { id: 3, name: 'Team Chat', lastMsg: 'Lunch break in 10 mins', time: '1h ago' },
-  ]
+  const [conversations, setConversations] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const loadConversations = async () => {
+    try {
+      const response = await apiClient.getMessages()
+      setConversations(Array.isArray(response) ? response : [])
+    } catch (error) {
+      console.error('Failed to load staff conversations:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadConversations()
+
+    const syncConversations = () => {
+      loadConversations()
+    }
+
+    socketService.on('chat:message-received', syncConversations)
+    socketService.on('request:status-changed', syncConversations)
+
+    return () => {
+      socketService.off('chat:message-received', syncConversations)
+      socketService.off('request:status-changed', syncConversations)
+    }
+  }, [])
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Messages</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator color="#3b82f6" />
+        </View>
+      </View>
+    )
+  }
 
   return (
     <View style={styles.container}>
@@ -19,10 +58,10 @@ export default function MessagesScreen() {
           <TouchableOpacity style={styles.conversation}>
             <View style={styles.avatar} />
             <View style={styles.content}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.lastMsg}>{item.lastMsg}</Text>
+              <Text style={styles.name}>{item.name || `Conversation ${item.id}`}</Text>
+              <Text style={styles.lastMsg}>{item.lastMessage || item.message || 'No messages yet'}</Text>
             </View>
-            <Text style={styles.time}>{item.time}</Text>
+            <Text style={styles.time}>{item.timestamp || item.time || 'now'}</Text>
           </TouchableOpacity>
         )}
         keyExtractor={(item) => item.id.toString()}
@@ -36,6 +75,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f172a' },
   header: { paddingTop: 50, paddingHorizontal: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: '#1e293b' },
   headerTitle: { fontSize: 28, fontWeight: 'bold', color: '#f8fafc' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   list: { paddingHorizontal: 16, paddingVertical: 8 },
   conversation: { flexDirection: 'row', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#1e293b', alignItems: 'center' },
   avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#3b82f6', marginRight: 12 },
