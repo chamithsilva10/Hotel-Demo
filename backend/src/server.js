@@ -57,6 +57,10 @@ function verifyToken(token) {
     .update(`${encodedHeader}.${encodedPayload}`)
     .digest('base64url')
 
+  if (signature.length !== expectedSignature.length) {
+    return null
+  }
+
   if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
     return null
   }
