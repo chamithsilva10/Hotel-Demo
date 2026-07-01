@@ -29,28 +29,7 @@ export default function QRLoginScreen() {
     setLoading(true);
     try {
       const room = roomNumber.trim();
-      // Mock login - works without backend
-      const mockGuests: Record<string, { name: string; room: string }> = {
-        '301': { name: 'John Doe', room: '301' },
-        '302': { name: 'Jane Smith', room: '302' },
-        '303': { name: 'Bob Wilson', room: '303' },
-        '201': { name: 'Alice Brown', room: '201' },
-        '202': { name: 'Charlie Davis', room: '202' },
-        '101': { name: 'Diana Lee', room: '101' },
-      };
-
-      if (mockGuests[room]) {
-        setToken('mock-token-' + room);
-        setGuest({
-          id: room,
-          name: mockGuests[room].name,
-          email: `${room}@hotel.com`,
-          roomNumber: room,
-          checkIn: '2026-06-28',
-          checkOut: '2026-07-02',
-        });
-      } else {
-        // Try API if available
+      try {
         const qrData = JSON.stringify({
           roomNumber: room,
           authToken: authToken.trim() || 'web-login',
@@ -61,6 +40,29 @@ export default function QRLoginScreen() {
           setGuest(response.data.guest);
         } else {
           throw new Error(response.message || 'Login failed');
+        }
+      } catch (backendError) {
+        const mockGuests: Record<string, { name: string; room: string }> = {
+          '301': { name: 'John Doe', room: '301' },
+          '302': { name: 'Jane Smith', room: '302' },
+          '303': { name: 'Bob Wilson', room: '303' },
+          '201': { name: 'Alice Brown', room: '201' },
+          '202': { name: 'Charlie Davis', room: '202' },
+          '101': { name: 'Diana Lee', room: '101' },
+        };
+
+        if (mockGuests[room]) {
+          setToken('mock-token-' + room);
+          setGuest({
+            id: room,
+            name: mockGuests[room].name,
+            email: `${room}@hotel.com`,
+            roomNumber: room,
+            checkIn: '2026-06-28',
+            checkOut: '2026-07-02',
+          });
+        } else {
+          throw backendError;
         }
       }
     } catch (error: any) {
