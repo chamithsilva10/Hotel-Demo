@@ -67,6 +67,8 @@ export default function TaskDashboardScreen({ navigation }: any) {
     switch (priority) {
       case 'Critical':
         return '#ef4444'
+      case 'High':
+        return '#f97316'
       case 'Medium':
         return '#f59e0b'
       case 'Low':
