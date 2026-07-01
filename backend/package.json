@@ -1,0 +1,13 @@
+{
+  "name": "hotel-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "node src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "socket.io": "^4.8.1"
+  }
+}
