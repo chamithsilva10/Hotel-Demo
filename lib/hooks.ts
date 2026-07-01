@@ -3,7 +3,11 @@ import useSWR from 'swr'
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export function useRequests() {
-  const { data, error, isLoading, mutate } = useSWR('/api/requests', fetcher)
+  const { data, error, isLoading, mutate } = useSWR('/api/requests', fetcher, {
+    refreshInterval: 10000,
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+  })
 
   return {
     requests: Array.isArray(data) ? data : [],
@@ -14,7 +18,11 @@ export function useRequests() {
 }
 
 export function useGuests() {
-  const { data, error, isLoading, mutate } = useSWR('/api/guests', fetcher)
+  const { data, error, isLoading, mutate } = useSWR('/api/guests', fetcher, {
+    refreshInterval: 10000,
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+  })
 
   return {
     guests: Array.isArray(data) ? data : [],
@@ -25,7 +33,11 @@ export function useGuests() {
 }
 
 export function useStaff() {
-  const { data, error, isLoading, mutate } = useSWR('/api/staff', fetcher)
+  const { data, error, isLoading, mutate } = useSWR('/api/staff', fetcher, {
+    refreshInterval: 10000,
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+  })
 
   return {
     staff: Array.isArray(data) ? data : [],

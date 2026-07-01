@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Sidebar } from '@/components/sidebar'
 import { RequestModal } from '@/components/request-modal'
 import { GuestModal } from '@/components/guest-modal'
 import { StaffModal } from '@/components/staff-modal'
 import { useRequests, useGuests, useStaff } from '@/lib/hooks'
+import { connectHotelSocket, disconnectHotelSocket, onHotelEvent, offHotelEvent } from '@/lib/realtime'
 import { Search, Plus, Users, AlertCircle, CheckCircle2 } from 'lucide-react'
 
 export default function Page() {
@@ -23,6 +24,44 @@ export default function Page() {
   const { requests, mutate: mutateRequests, isLoading: requestsLoading } = useRequests()
   const { guests, mutate: mutateGuests, isLoading: guestsLoading } = useGuests()
   const { staff, mutate: mutateStaff, isLoading: staffLoading } = useStaff()
+
+  useEffect(() => {
+    const socket = connectHotelSocket({ role: 'admin' })
+
+    const syncRequests = () => {
+      mutateRequests()
+      mutateGuests()
+      mutateStaff()
+    }
+
+    const syncMessages = () => {
+      mutateRequests()
+    }
+
+    const syncNotifications = () => {
+      mutateRequests()
+      mutateStaff()
+    }
+
+    socket.on('connect', syncRequests)
+    onHotelEvent('request:created', syncRequests)
+    onHotelEvent('request:assigned', syncRequests)
+    onHotelEvent('request:status-changed', syncRequests)
+    onHotelEvent('chat:message-received', syncMessages)
+    onHotelEvent('notification:new', syncNotifications)
+    onHotelEvent('staff:status-changed', syncRequests)
+
+    return () => {
+      socket.off('connect', syncRequests)
+      offHotelEvent('request:created', syncRequests)
+      offHotelEvent('request:assigned', syncRequests)
+      offHotelEvent('request:status-changed', syncRequests)
+      offHotelEvent('chat:message-received', syncMessages)
+      offHotelEvent('notification:new', syncNotifications)
+      offHotelEvent('staff:status-changed', syncRequests)
+      disconnectHotelSocket()
+    }
+  }, [mutateGuests, mutateRequests, mutateStaff])
 
   const handleRequestClick = (req: any) => {
     setSelectedRequest(req)
