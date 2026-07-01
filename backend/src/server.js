@@ -739,7 +739,7 @@ async function handleRequestRoutes(io, req, res, pathname, body, auth) {
       const request = await createRequest(io, body, auth || {})
       created(res, mapRequest(request), 'Request created')
     } catch (error) {
-      error(res, 400, 'ValidationError', error.message || 'Failed to create request')
+      sendError(res, 400, 'ValidationError', error.message || 'Failed to create request')
     }
     return true
   }
@@ -824,6 +824,11 @@ async function handleRequestRoutes(io, req, res, pathname, body, auth) {
       requestId: assignMatch[1],
       staffId: String(body.staffId),
       staffName: result.staff.name,
+    })
+    io.emit('request:status-changed', {
+      requestId: assignMatch[1],
+      status: result.updated.status,
+      updatedAt: toIso(result.updated.updated_at),
     })
     success(res, mapRequest(result.updated), 'Request assigned')
     return true
@@ -1388,7 +1393,7 @@ async function main() {
       await routeRequest(io, req, res, pathname, body)
     } catch (error) {
       console.error('Request handling error:', error)
-      error(res, 500, 'ServerError', error.message || 'Unexpected server error')
+      sendError(res, 500, 'ServerError', error.message || 'Unexpected server error')
     }
   })
 
@@ -1470,6 +1475,11 @@ async function main() {
             staffId: String(payload.staffId),
             staffName: result.staff.name,
           })
+          io.emit('request:status-changed', {
+            requestId: String(payload.requestId),
+            status: result.updated.status,
+            updatedAt: toIso(result.updated.updated_at),
+          })
         }
       } catch (error) {
         socket.emit('error', { message: error.message || 'Failed to assign request' })
@@ -1515,6 +1525,11 @@ async function main() {
         const result = await assignRequest(io, Number(payload.requestId), Number(userId))
         if (result?.updated) {
           io.emit('request:assigned', { requestId: String(payload.requestId), staffId: String(userId), staffName: result.staff.name })
+          io.emit('request:status-changed', {
+            requestId: String(payload.requestId),
+            status: result.updated.status,
+            updatedAt: toIso(result.updated.updated_at),
+          })
         }
       } catch (error) {
         socket.emit('error', { message: error.message || 'Failed to claim task' })
