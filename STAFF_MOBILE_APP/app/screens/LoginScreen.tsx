@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { apiClient } from '../utils/api'
+import { socketService } from '../utils/socket'
 
 export default function LoginScreen({ setIsLoggedIn }: any) {
   const [employeeId, setEmployeeId] = useState('')
@@ -30,10 +31,12 @@ export default function LoginScreen({ setIsLoggedIn }: any) {
         password,
       })
 
-      if (response.success) {
+      if (response?.token) {
+        socketService.setAuthToken(response.token)
+        socketService.connect({ role: 'staff' })
         setIsLoggedIn(true)
       } else {
-        throw new Error(response.message || 'Login failed')
+        throw new Error('Login failed')
       }
     } catch (error) {
       Alert.alert('Error', 'Login failed. Please try again.')
