@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   View,
   Text,
@@ -6,41 +6,51 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
+  RefreshControl,
 } from 'react-native'
+import { apiClient } from '../utils/api'
+import { socketService } from '../utils/socket'
 
 export default function TaskDashboardScreen({ navigation }: any) {
-  const tasks = [
-    {
-      id: 1,
-      room: '301',
-      service: 'Room Service',
-      guest: 'John Smith',
-      priority: 'Critical',
-      description: 'Air conditioning not working',
-      status: 'pending',
-      time: '10:00 AM',
-    },
-    {
-      id: 2,
-      room: '415',
-      service: 'Housekeeping',
-      guest: 'Sarah Chen',
-      priority: 'Medium',
-      description: 'Extra towels and sheets needed',
-      status: 'accepted',
-      time: '11:30 AM',
-    },
-    {
-      id: 3,
-      room: '502',
-      service: 'Maintenance',
-      guest: 'James Wilson',
-      priority: 'Low',
-      description: 'Bathroom sink dripping',
-      status: 'in-progress',
-      time: '2:00 PM',
-    },
-  ]
+  const [tasks, setTasks] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const loadTasks = async () => {
+    try {
+      const response = await apiClient.getRequests()
+      setTasks(Array.isArray(response) ? response : [])
+    } catch (error) {
+      console.error('Failed to load staff tasks:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadTasks()
+
+    const handleSync = () => {
+      loadTasks()
+    }
+
+    socketService.on('request:created', handleSync)
+    socketService.on('request:assigned', handleSync)
+    socketService.on('request:status-changed', handleSync)
+
+    return () => {
+      socketService.off('request:created', handleSync)
+      socketService.off('request:assigned', handleSync)
+      socketService.off('request:status-changed', handleSync)
+    }
+  }, [])
+
+  const visibleTasks = useMemo(() => {
+    return [...tasks].sort((left, right) => {
+      const order: Record<string, number> = { Critical: 0, High: 1, Medium: 2, Low: 3 }
+      return (order[left.priority] ?? 99) - (order[right.priority] ?? 99)
+    })
+  }, [tasks])
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -154,11 +164,18 @@ export default function TaskDashboardScreen({ navigation }: any) {
       </View>
 
       <FlatList
-        data={tasks}
+        data={visibleTasks}
         renderItem={renderTaskCard}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         scrollEnabled={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={async () => {
+            setRefreshing(true)
+            await loadTasks()
+            setRefreshing(false)
+          }} tintColor="#3b82f6" />
+        }
       />
     </View>
   )

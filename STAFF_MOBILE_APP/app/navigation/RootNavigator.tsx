@@ -11,6 +11,7 @@ import ScheduleScreen from '../screens/ScheduleScreen'
 import MessagesScreen from '../screens/MessagesScreen'
 import NotificationsScreen from '../screens/NotificationsScreen'
 import ProfileScreen from '../screens/ProfileScreen'
+import { socketService } from '../utils/socket'
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -85,6 +86,18 @@ const TabNavigator = () => {
 
 export const RootNavigator = () => {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false)
+
+  React.useEffect(() => {
+    if (isLoggedIn) {
+      socketService.connect({ role: 'staff' })
+      return () => {
+        socketService.disconnect()
+      }
+    }
+
+    socketService.disconnect()
+    return undefined
+  }, [isLoggedIn])
 
   return (
     <NavigationContainer>
