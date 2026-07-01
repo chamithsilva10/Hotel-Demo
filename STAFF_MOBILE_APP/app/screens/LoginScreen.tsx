@@ -8,33 +8,40 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native'
+import { apiClient } from '../utils/api'
 
 export default function LoginScreen({ setIsLoggedIn }: any) {
   const [employeeId, setEmployeeId] = useState('')
-  const [pin, setPin] = useState('')
+  const [department, setDepartment] = useState('Housekeeping')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleLogin = async () => {
-    if (!employeeId || !pin) {
-      Alert.alert('Error', 'Please enter Employee ID and PIN')
+    if (!employeeId || !department || !password) {
+      Alert.alert('Error', 'Please enter Employee ID, Department, and Password')
       return
     }
 
     setLoading(true)
     try {
-      // Simulate API call
-      setTimeout(() => {
-        if (employeeId === 'E001' && pin === '1234') {
-          setIsLoggedIn(true)
-        } else {
-          Alert.alert('Error', 'Invalid credentials. Try E001/1234')
-        }
-        setLoading(false)
-      }, 1000)
+      const response = await apiClient.loginStaff({
+        employeeId: employeeId.trim(),
+        department: department.trim(),
+        password,
+      })
+
+      if (response.success) {
+        setIsLoggedIn(true)
+      } else {
+        throw new Error(response.message || 'Login failed')
+      }
     } catch (error) {
       Alert.alert('Error', 'Login failed. Please try again.')
       setLoading(false)
+      return
     }
+
+    setLoading(false)
   }
 
   return (
@@ -58,13 +65,25 @@ export default function LoginScreen({ setIsLoggedIn }: any) {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>PIN</Text>
+          <Text style={styles.label}>Department</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your PIN"
+            placeholder="Housekeeping, Maintenance, Concierge..."
             placeholderTextColor="#94a3b8"
-            value={pin}
-            onChangeText={setPin}
+            value={department}
+            onChangeText={setDepartment}
+            editable={!loading}
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your password"
+            placeholderTextColor="#94a3b8"
+            value={password}
+            onChangeText={setPassword}
             secureTextEntry
             editable={!loading}
           />
@@ -82,7 +101,7 @@ export default function LoginScreen({ setIsLoggedIn }: any) {
           )}
         </TouchableOpacity>
 
-        <Text style={styles.helperText}>Demo: E001 / 1234</Text>
+        <Text style={styles.helperText}>Demo: E001 / Housekeeping / 1234</Text>
       </View>
 
       <View style={styles.footer}>
