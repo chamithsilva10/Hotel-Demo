@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { socketService } from '../utils/socket'
 
 export default function ProfileScreen() {
   return (
@@ -27,7 +28,7 @@ export default function ProfileScreen() {
         </View>
       </View>
       <TouchableOpacity style={styles.logoutBtn}>
-        <Text style={styles.logoutText}>Sign Out</Text>
+        <Text style={styles.logoutText} onPress={() => socketService.disconnect()}>Sign Out</Text>
       </TouchableOpacity>
     </View>
   )
