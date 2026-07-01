@@ -392,54 +392,69 @@ async function requestWithRelations(requestId) {
 }
 
 async function seedIfNeeded() {
-  const guestCount = await pool.query('SELECT COUNT(*)::int AS count FROM guests')
-  if (guestCount.rows[0].count === 0) {
-    await pool.query(
+  const existingGuests = await pool.query('SELECT * FROM guests ORDER BY id ASC')
+  const guestMap = new Map(existingGuests.rows.map((row) => [row.room_number, row]))
+
+  if (!guestMap.has('301')) {
+    const result = await pool.query(
       `INSERT INTO guests (name, email, phone, room_number, check_in, check_out, status)
-       VALUES
-         ($1, $2, $3, $4, $5, $6, $7),
-         ($8, $9, $10, $11, $12, $13, $14)`,
-      [
-        'John Smith', 'john.smith@example.com', '+1-555-0101', '301', '2026-06-28T12:00:00Z', '2026-07-02T11:00:00Z', 'active',
-        'Sarah Chen', 'sarah.chen@example.com', '+1-555-0102', '415', '2026-06-29T12:00:00Z', '2026-07-03T11:00:00Z', 'active',
-      ],
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      ['John Smith', 'john.smith@example.com', '+1-555-0101', '301', '2026-06-28T12:00:00Z', '2026-07-02T11:00:00Z', 'active'],
     )
+    guestMap.set('301', result.rows[0])
   }
 
-  const staffCount = await pool.query('SELECT COUNT(*)::int AS count FROM staff')
-  if (staffCount.rows[0].count === 0) {
-    const passwordHash = hashPassword('1234')
-    const supervisorHash = hashPassword('1234')
-    await pool.query(
-      `INSERT INTO staff (employee_id, name, department, position, email, phone, password_hash, is_on_duty, current_task_count, role, start_date, status)
-       VALUES
-         ($1, $2, $3, $4, $5, $6, $7, true, 2, $8, $9, $10),
-         ($11, $12, $13, $14, $15, $16, $17, true, 1, $18, $19, $20)`,
-      [
-        'E001', 'Mike Johnson', 'Housekeeping', 'Team Lead', 'mike@hotelstaff.com', '+1-555-0201', passwordHash, 'supervisor', '2025-01-12', 'active',
-        'E002', 'Lisa Brown', 'Maintenance', 'Manager', 'lisa@hotelstaff.com', '+1-555-0202', supervisorHash, 'manager', '2024-11-20', 'active',
-      ],
+  if (!guestMap.has('415')) {
+    const result = await pool.query(
+      `INSERT INTO guests (name, email, phone, room_number, check_in, check_out, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      ['Sarah Chen', 'sarah.chen@example.com', '+1-555-0102', '415', '2026-06-29T12:00:00Z', '2026-07-03T11:00:00Z', 'active'],
     )
+    guestMap.set('415', result.rows[0])
+  }
+
+  const existingStaff = await pool.query('SELECT * FROM staff ORDER BY id ASC')
+  const staffMap = new Map(existingStaff.rows.map((row) => [row.employee_id, row]))
+  if (!staffMap.has('E001')) {
+    const result = await pool.query(
+      `INSERT INTO staff (employee_id, name, department, position, email, phone, password_hash, is_on_duty, current_task_count, role, start_date, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, true, 2, $8, $9, $10) RETURNING *`,
+      ['E001', 'Mike Johnson', 'Housekeeping', 'Team Lead', 'mike@hotelstaff.com', '+1-555-0201', hashPassword('1234'), 'supervisor', '2025-01-12', 'active'],
+    )
+    staffMap.set('E001', result.rows[0])
+  }
+
+  if (!staffMap.has('E002')) {
+    const result = await pool.query(
+      `INSERT INTO staff (employee_id, name, department, position, email, phone, password_hash, is_on_duty, current_task_count, role, start_date, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, true, 1, $8, $9, $10) RETURNING *`,
+      ['E002', 'Lisa Brown', 'Maintenance', 'Manager', 'lisa@hotelstaff.com', '+1-555-0202', hashPassword('1234'), 'manager', '2024-11-20', 'active'],
+    )
+    staffMap.set('E002', result.rows[0])
   }
 
   const requestCount = await pool.query('SELECT COUNT(*)::int AS count FROM service_requests')
   if (requestCount.rows[0].count === 0) {
-    const guestResult = await pool.query('SELECT id, room_number, name, phone FROM guests ORDER BY id ASC LIMIT 2')
-    const [guestA, guestB] = guestResult.rows
+    const guestA = guestMap.get('301')
+    const guestB = guestMap.get('415')
+    const staffA = staffMap.get('E001')
+    const staffB = staffMap.get('E002')
+
     const requestInsert = await pool.query(
       `INSERT INTO service_requests (guest_id, room_number, guest_name, guest_phone, type, description, priority, status, assigned_to, estimated_time, notes)
        VALUES
          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11),
          ($12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22),
-         ($23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33)`,
+         ($23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33)
+       RETURNING *`,
       [
         guestA.id, guestA.room_number, guestA.name, guestA.phone, 'Room Service', 'Air conditioning not working', 'Critical', 'pending', null, 30, 'Needs urgent attention',
-        guestA.id, guestA.room_number, guestA.name, guestA.phone, 'Housekeeping', 'Extra towels and sheets needed', 'Medium', 'accepted', 1, 15, 'Guest requested before dinner',
-        guestB.id, guestB.room_number, guestB.name, guestB.phone, 'Maintenance', 'Bathroom sink dripping', 'Low', 'in-progress', 2, 45, 'Check pipe seal',
+        guestA.id, guestA.room_number, guestA.name, guestA.phone, 'Housekeeping', 'Extra towels and sheets needed', 'Medium', 'accepted', staffA.id, 15, 'Guest requested before dinner',
+        guestB.id, guestB.room_number, guestB.name, guestB.phone, 'Maintenance', 'Bathroom sink dripping', 'Low', 'in-progress', staffB.id, 45, 'Check pipe seal',
       ],
     )
 
-    const [requestA, requestB, requestC] = requestInsert.rows
+    const [requestA, requestB] = requestInsert.rows
     await pool.query(
       `INSERT INTO chat_messages (request_id, conversation_id, sender_role, sender_id, sender_name, text, priority, is_quick_option, is_read)
        VALUES
@@ -448,7 +463,7 @@ async function seedIfNeeded() {
          ($15, $16, $17, $18, $19, $20, $21, false, false)`,
       [
         requestA.id, requestA.id, 'guest', guestA.id, guestA.name, 'Hi, the AC is not working in my room.', 'Critical',
-        requestA.id, requestA.id, 'staff', 1, 'Mike Johnson', 'A technician will be with you shortly.', 'Medium',
+        requestA.id, requestA.id, 'staff', staffA.id, staffA.name, 'A technician will be with you shortly.', 'Medium',
         requestB.id, requestB.id, 'guest', guestA.id, guestA.name, 'Thank you for the towels!', 'Low',
       ],
     )
@@ -456,9 +471,9 @@ async function seedIfNeeded() {
     await pool.query(
       `INSERT INTO notifications (recipient_type, recipient_id, type, title, message, icon, priority, is_read)
        VALUES
-         ('staff', 1, 'critical', 'Critical Request - Room 301', 'Air conditioning not working - assigned to Mike Johnson', 'alert-circle', 'Critical', false),
-         ('guest', $1, 'request-accepted', 'Request Accepted', 'Housekeeping will arrive shortly', 'check-circle', 'Medium', false)`,
-      [guestA.id],
+         ('staff', $1, 'critical', 'Critical Request - Room 301', 'Air conditioning not working - assigned to Mike Johnson', 'alert-circle', 'Critical', false),
+         ('guest', $2, 'request-accepted', 'Request Accepted', 'Housekeeping will arrive shortly', 'check-circle', 'Medium', false)`,
+      [staffA.id, guestA.id],
     )
   }
 }
