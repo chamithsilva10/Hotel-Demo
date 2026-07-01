@@ -1,6 +1,17 @@
 import useSWR from 'swr'
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+
+const fetcher = async (path: string) => {
+  const response = await fetch(`${API_BASE_URL}${path}`)
+  const payload = await response.json()
+
+  if (!response.ok) {
+    throw new Error(payload?.message || 'Request failed')
+  }
+
+  return payload?.data ?? payload
+}
 
 export function useRequests() {
   const { data, error, isLoading, mutate } = useSWR('/api/requests', fetcher, {
@@ -48,85 +59,94 @@ export function useStaff() {
 }
 
 export async function createRequest(requestData: any) {
-  const response = await fetch('/api/requests', {
+  const response = await fetch(`${API_BASE_URL}/api/requests`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(requestData),
   })
-  if (!response.ok) throw new Error('Failed to create request')
-  return response.json()
+  const payload = await response.json()
+  if (!response.ok) throw new Error(payload?.message || 'Failed to create request')
+  return payload.data ?? payload
 }
 
 export async function updateRequest(id: number, updates: any) {
-  const response = await fetch('/api/requests', {
-    method: 'PATCH',
+  const response = await fetch(`${API_BASE_URL}/api/requests/${id}`, {
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, ...updates }),
+    body: JSON.stringify(updates),
   })
-  if (!response.ok) throw new Error('Failed to update request')
-  return response.json()
+  const payload = await response.json()
+  if (!response.ok) throw new Error(payload?.message || 'Failed to update request')
+  return payload.data ?? payload
 }
 
 export async function deleteRequest(id: number) {
-  const response = await fetch(`/api/requests?id=${id}`, {
+  const response = await fetch(`${API_BASE_URL}/api/requests/${id}`, {
     method: 'DELETE',
   })
-  if (!response.ok) throw new Error('Failed to delete request')
-  return response.json()
+  const payload = await response.json()
+  if (!response.ok) throw new Error(payload?.message || 'Failed to delete request')
+  return payload.data ?? payload
 }
 
 export async function createGuest(guestData: any) {
-  const response = await fetch('/api/guests', {
+  const response = await fetch(`${API_BASE_URL}/api/guests`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(guestData),
   })
-  if (!response.ok) throw new Error('Failed to create guest')
-  return response.json()
+  const payload = await response.json()
+  if (!response.ok) throw new Error(payload?.message || 'Failed to create guest')
+  return payload.data ?? payload
 }
 
 export async function updateGuest(id: number, updates: any) {
-  const response = await fetch('/api/guests', {
+  const response = await fetch(`${API_BASE_URL}/api/guests`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id, ...updates }),
   })
-  if (!response.ok) throw new Error('Failed to update guest')
-  return response.json()
+  const payload = await response.json()
+  if (!response.ok) throw new Error(payload?.message || 'Failed to update guest')
+  return payload.data ?? payload
 }
 
 export async function deleteGuest(id: number) {
-  const response = await fetch(`/api/guests?id=${id}`, {
+  const response = await fetch(`${API_BASE_URL}/api/guests?id=${id}`, {
     method: 'DELETE',
   })
-  if (!response.ok) throw new Error('Failed to delete guest')
-  return response.json()
+  const payload = await response.json()
+  if (!response.ok) throw new Error(payload?.message || 'Failed to delete guest')
+  return payload.data ?? payload
 }
 
 export async function createStaff(staffData: any) {
-  const response = await fetch('/api/staff', {
+  const response = await fetch(`${API_BASE_URL}/api/staff`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(staffData),
   })
-  if (!response.ok) throw new Error('Failed to create staff')
-  return response.json()
+  const payload = await response.json()
+  if (!response.ok) throw new Error(payload?.message || 'Failed to create staff')
+  return payload.data ?? payload
 }
 
 export async function updateStaff(id: number, updates: any) {
-  const response = await fetch('/api/staff', {
+  const response = await fetch(`${API_BASE_URL}/api/staff`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id, ...updates }),
   })
-  if (!response.ok) throw new Error('Failed to update staff')
-  return response.json()
+  const payload = await response.json()
+  if (!response.ok) throw new Error(payload?.message || 'Failed to update staff')
+  return payload.data ?? payload
 }
 
 export async function deleteStaff(id: number) {
-  const response = await fetch(`/api/staff?id=${id}`, {
+  const response = await fetch(`${API_BASE_URL}/api/staff?id=${id}`, {
     method: 'DELETE',
   })
-  if (!response.ok) throw new Error('Failed to delete staff')
-  return response.json()
+  const payload = await response.json()
+  if (!response.ok) throw new Error(payload?.message || 'Failed to delete staff')
+  return payload.data ?? payload
 }
