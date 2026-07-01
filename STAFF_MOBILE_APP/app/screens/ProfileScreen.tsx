@@ -27,8 +27,8 @@ export default function ProfileScreen() {
           <Text style={styles.value}>mike@hotelstaff.com</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.logoutBtn}>
-        <Text style={styles.logoutText} onPress={() => socketService.disconnect()}>Sign Out</Text>
+      <TouchableOpacity style={styles.logoutBtn} onPress={() => socketService.disconnect()}>
+        <Text style={styles.logoutText}>Sign Out</Text>
       </TouchableOpacity>
     </View>
   )
