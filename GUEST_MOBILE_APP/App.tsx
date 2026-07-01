@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
 // Navigation
 import RootNavigator from './app/navigation/RootNavigator';
@@ -35,7 +35,9 @@ export default function App() {
       socketService.connect();
 
       // Register for push notifications
-      registerForPushNotificationsAsync();
+      if (Platform.OS !== 'web') {
+        registerForPushNotificationsAsync();
+      }
 
       // Setup socket listeners
       setupSocketListeners();
