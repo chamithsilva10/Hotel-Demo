@@ -12,6 +12,11 @@ type StaffSocketEventMap = {
 
 class SocketService {
   private socket: Socket | null = null
+  private authToken: string | null = null
+
+  setAuthToken(token: string | null) {
+    this.authToken = token
+  }
 
   connect(auth: { role: 'staff'; userId?: string } = { role: 'staff' }) {
     if (this.socket?.connected) {
@@ -19,7 +24,10 @@ class SocketService {
     }
 
     this.socket = io(SOCKET_URL, {
-      auth,
+      auth: {
+        ...auth,
+        token: this.authToken || undefined,
+      },
       transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: 5,
