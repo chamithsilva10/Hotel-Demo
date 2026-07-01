@@ -469,14 +469,13 @@ function departmentFromRequest(requestRow) {
   return departmentForService(requestRow.type)
 }
 
-function emitRequestUpdate(io, requestRow) {
+function emitRequestStatusChanged(io, requestRow) {
   const payload = mapRequest(requestRow)
   io.emit('request:status-changed', {
     requestId: payload.id,
     status: payload.status,
     updatedAt: payload.updatedAt,
   })
-  io.emit('request:created', payload)
 
   if (payload.assignedStaffId) {
     io.to(`staff-${payload.assignedStaffId}`).emit('request:assigned', {
@@ -493,6 +492,11 @@ function emitRequestUpdate(io, requestRow) {
       updatedAt: payload.updatedAt,
     })
   }
+}
+
+function emitRequestCreated(io, requestRow) {
+  const payload = mapRequest(requestRow)
+  io.emit('request:created', payload)
 
   const department = departmentFromRequest(requestRow)
   io.to(`department-${department}`).emit('request:created', payload)
@@ -563,7 +567,7 @@ async function updateRequestStatus(io, requestId, status) {
     details: `Request ${requestId} changed to ${status}`,
   })
 
-  emitRequestUpdate(io, updated)
+  emitRequestStatusChanged(io, updated)
   return updated
 }
 
@@ -605,7 +609,7 @@ async function createRequest(io, payload, actor = {}) {
     details: `New ${request.type} request created with ${request.priority} priority`,
   })
 
-  emitRequestUpdate(io, request)
+  emitRequestCreated(io, request)
 
   const department = departmentForService(request.type)
   if (request.priority === 'Critical' || request.priority === 'High') {
@@ -794,7 +798,7 @@ async function handleRequestRoutes(io, req, res, pathname, body, auth) {
       return true
     }
 
-    emitRequestUpdate(io, result.rows[0])
+    emitRequestStatusChanged(io, result.rows[0])
     success(res, mapRequest(result.rows[0]), 'Request updated')
     return true
   }
@@ -1425,8 +1429,7 @@ async function main() {
 
     socket.on('request:create', async (payload) => {
       try {
-        const request = await createRequest(io, payload, user)
-        io.emit('request:created', mapRequest(request))
+        await createRequest(io, payload, user)
       } catch (error) {
         socket.emit('error', { message: error.message || 'Failed to create request' })
       }
@@ -1450,7 +1453,7 @@ async function main() {
           [payload.roomNumber || null, payload.guestName || null, payload.guestPhone || null, payload.type || null, payload.description || null, payload.priority || null, payload.notes || null, payload.requestId],
         )
         if (result.rows[0]) {
-          emitRequestUpdate(io, result.rows[0])
+          emitRequestStatusChanged(io, result.rows[0])
         }
       } catch (error) {
         socket.emit('error', { message: error.message || 'Failed to update request' })
