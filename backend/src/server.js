@@ -124,7 +124,7 @@ function created(res, data, message = 'Created') {
   sendJson(res, 201, { success: true, data, message })
 }
 
-function error(res, statusCode, errorName, message) {
+function sendError(res, statusCode, errorName, message) {
   sendJson(res, statusCode, { success: false, error: errorName, message })
 }
 
@@ -636,7 +636,7 @@ async function handleAuthRoutes(req, res, pathname, body) {
     const roomNumber = body.roomNumber || parsed.roomNumber
 
     if (!roomNumber) {
-      error(res, 400, 'ValidationError', 'roomNumber is required')
+      sendError(res, 400, 'ValidationError', 'roomNumber is required')
       return true
     }
 
@@ -667,13 +667,13 @@ async function handleAuthRoutes(req, res, pathname, body) {
   if (req.method === 'POST' && pathname === '/api/auth/staff-login') {
     const { employeeId, department, password } = body
     if (!employeeId || !department || !password) {
-      error(res, 400, 'ValidationError', 'employeeId, department and password are required')
+      sendError(res, 400, 'ValidationError', 'employeeId, department and password are required')
       return true
     }
 
     const staff = await getStaffByEmployeeId(employeeId, department)
     if (!staff || !verifyPassword(password, staff.password_hash)) {
-      error(res, 401, 'AuthenticationError', 'Invalid staff credentials')
+      sendError(res, 401, 'AuthenticationError', 'Invalid staff credentials')
       return true
     }
 
@@ -685,7 +685,7 @@ async function handleAuthRoutes(req, res, pathname, body) {
   if (req.method === 'POST' && pathname === '/api/auth/register-guest') {
     const { name, email, phone, roomNumber, checkIn, checkOut } = body
     if (!name || !roomNumber) {
-      error(res, 400, 'ValidationError', 'name and roomNumber are required')
+      sendError(res, 400, 'ValidationError', 'name and roomNumber are required')
       return true
     }
 
@@ -749,7 +749,7 @@ async function handleRequestRoutes(io, req, res, pathname, body, auth) {
   if (requestMatch && req.method === 'GET') {
     const request = await requestWithRelations(requestMatch[1])
     if (!request) {
-      error(res, 404, 'NotFoundError', 'Request not found')
+      sendError(res, 404, 'NotFoundError', 'Request not found')
       return true
     }
     success(res, request)
@@ -790,7 +790,7 @@ async function handleRequestRoutes(io, req, res, pathname, body, auth) {
     )
 
     if (!result.rows[0]) {
-      error(res, 404, 'NotFoundError', 'Request not found')
+      sendError(res, 404, 'NotFoundError', 'Request not found')
       return true
     }
 
@@ -802,7 +802,7 @@ async function handleRequestRoutes(io, req, res, pathname, body, auth) {
   if (statusMatch && req.method === 'PUT') {
     const updated = await updateRequestStatus(io, statusMatch[1], body.status)
     if (!updated) {
-      error(res, 404, 'NotFoundError', 'Request not found')
+      sendError(res, 404, 'NotFoundError', 'Request not found')
       return true
     }
     success(res, mapRequest(updated), 'Request status updated')
@@ -812,7 +812,7 @@ async function handleRequestRoutes(io, req, res, pathname, body, auth) {
   if (assignMatch && req.method === 'PUT') {
     const result = await assignRequest(io, assignMatch[1], Number(body.staffId))
     if (!result) {
-      error(res, 404, 'NotFoundError', 'Request or staff not found')
+      sendError(res, 404, 'NotFoundError', 'Request or staff not found')
       return true
     }
 
@@ -845,13 +845,13 @@ async function handleRequestRoutes(io, req, res, pathname, body, auth) {
     const requestId = Number(messagesMatch[1])
     const request = await getRequestById(requestId)
     if (!request) {
-      error(res, 404, 'NotFoundError', 'Request not found')
+      sendError(res, 404, 'NotFoundError', 'Request not found')
       return true
     }
 
     const message = body.message || body.text
     if (!message) {
-      error(res, 400, 'ValidationError', 'message is required')
+      sendError(res, 400, 'ValidationError', 'message is required')
       return true
     }
 
@@ -902,7 +902,7 @@ async function handleRequestRoutes(io, req, res, pathname, body, auth) {
     const requestId = Number(quickReplyMatch[1])
     const request = await getRequestById(requestId)
     if (!request) {
-      error(res, 404, 'NotFoundError', 'Request not found')
+      sendError(res, 404, 'NotFoundError', 'Request not found')
       return true
     }
 
@@ -940,7 +940,7 @@ async function handleGuestRoutes(req, res, pathname, body) {
 
   if (req.method === 'PATCH' && pathname === '/api/guests') {
     if (!body.id) {
-      error(res, 400, 'ValidationError', 'id is required')
+      sendError(res, 400, 'ValidationError', 'id is required')
       return true
     }
 
@@ -960,7 +960,7 @@ async function handleGuestRoutes(req, res, pathname, body) {
     )
 
     if (!result.rows[0]) {
-      error(res, 404, 'NotFoundError', 'Guest not found')
+      sendError(res, 404, 'NotFoundError', 'Guest not found')
       return true
     }
 
@@ -971,7 +971,7 @@ async function handleGuestRoutes(req, res, pathname, body) {
   if (req.method === 'DELETE' && pathname === '/api/guests') {
     const id = getQueryParam(req, 'id')
     if (!id) {
-      error(res, 400, 'ValidationError', 'id is required')
+      sendError(res, 400, 'ValidationError', 'id is required')
       return true
     }
 
@@ -992,7 +992,7 @@ async function handleStaffRoutes(req, res, pathname, body) {
 
   if (req.method === 'POST' && pathname === '/api/staff') {
     if (!body.employeeId) {
-      error(res, 400, 'ValidationError', 'employeeId is required')
+      sendError(res, 400, 'ValidationError', 'employeeId is required')
       return true
     }
 
@@ -1023,7 +1023,7 @@ async function handleStaffRoutes(req, res, pathname, body) {
 
   if (req.method === 'PATCH' && pathname === '/api/staff') {
     if (!body.id) {
-      error(res, 400, 'ValidationError', 'id is required')
+      sendError(res, 400, 'ValidationError', 'id is required')
       return true
     }
 
@@ -1064,7 +1064,7 @@ async function handleStaffRoutes(req, res, pathname, body) {
     )
 
     if (!result.rows[0]) {
-      error(res, 404, 'NotFoundError', 'Staff not found')
+      sendError(res, 404, 'NotFoundError', 'Staff not found')
       return true
     }
 
@@ -1075,7 +1075,7 @@ async function handleStaffRoutes(req, res, pathname, body) {
   if (req.method === 'DELETE' && pathname === '/api/staff') {
     const id = getQueryParam(req, 'id')
     if (!id) {
-      error(res, 400, 'ValidationError', 'id is required')
+      sendError(res, 400, 'ValidationError', 'id is required')
       return true
     }
 
@@ -1094,7 +1094,7 @@ async function handleStaffRoutes(req, res, pathname, body) {
     )
 
     if (!result.rows[0]) {
-      error(res, 404, 'NotFoundError', 'Staff not found')
+      sendError(res, 404, 'NotFoundError', 'Staff not found')
       return true
     }
 
@@ -1154,7 +1154,7 @@ async function handleMessageRoutes(req, res, pathname, body, auth) {
   if (req.method === 'POST' && pathname === '/api/messages') {
     const conversationId = body.conversationId
     if (!conversationId || !body.text || !body.sender) {
-      error(res, 400, 'ValidationError', 'conversationId, sender, and text are required')
+      sendError(res, 400, 'ValidationError', 'conversationId, sender, and text are required')
       return true
     }
 
@@ -1203,7 +1203,7 @@ async function handleNotificationRoutes(req, res, pathname, body) {
 
   if (req.method === 'POST' && pathname === '/api/notifications') {
     if (!body.type || !body.title || !body.message) {
-      error(res, 400, 'ValidationError', 'type, title and message are required')
+      sendError(res, 400, 'ValidationError', 'type, title and message are required')
       return true
     }
 
@@ -1215,7 +1215,7 @@ async function handleNotificationRoutes(req, res, pathname, body) {
 
   if (req.method === 'PUT' && pathname === '/api/notifications') {
     if (body.notificationId === undefined) {
-      error(res, 400, 'ValidationError', 'notificationId is required')
+      sendError(res, 400, 'ValidationError', 'notificationId is required')
       return true
     }
 
@@ -1225,7 +1225,7 @@ async function handleNotificationRoutes(req, res, pathname, body) {
     )
 
     if (!result.rows[0]) {
-      error(res, 404, 'NotFoundError', 'Notification not found')
+      sendError(res, 404, 'NotFoundError', 'Notification not found')
       return true
     }
 
@@ -1236,7 +1236,7 @@ async function handleNotificationRoutes(req, res, pathname, body) {
   if (req.method === 'DELETE' && pathname === '/api/notifications') {
     const id = getQueryParam(req, 'id')
     if (!id) {
-      error(res, 400, 'ValidationError', 'id is required')
+      sendError(res, 400, 'ValidationError', 'id is required')
       return true
     }
 
@@ -1248,7 +1248,7 @@ async function handleNotificationRoutes(req, res, pathname, body) {
   if (req.method === 'POST' && pathname === '/api/notifications/fcm-token') {
     const { token, userType, userId } = body
     if (!token || !userType || !userId) {
-      error(res, 400, 'ValidationError', 'token, userType and userId are required')
+      sendError(res, 400, 'ValidationError', 'token, userType and userId are required')
       return true
     }
 
@@ -1305,7 +1305,7 @@ async function handleSchedulerRoutes(req, res, pathname, body) {
 
   if (req.method === 'PUT' && pathname === '/api/scheduler') {
     if (!body.assignmentId) {
-      error(res, 400, 'ValidationError', 'assignmentId is required')
+      sendError(res, 400, 'ValidationError', 'assignmentId is required')
       return true
     }
 
@@ -1321,7 +1321,7 @@ async function handleSchedulerRoutes(req, res, pathname, body) {
     )
 
     if (!result.rows[0]) {
-      error(res, 404, 'NotFoundError', 'Assignment not found')
+      sendError(res, 404, 'NotFoundError', 'Assignment not found')
       return true
     }
 
@@ -1332,7 +1332,7 @@ async function handleSchedulerRoutes(req, res, pathname, body) {
   if (req.method === 'DELETE' && pathname === '/api/scheduler') {
     const id = getQueryParam(req, 'id')
     if (!id) {
-      error(res, 400, 'ValidationError', 'id is required')
+      sendError(res, 400, 'ValidationError', 'id is required')
       return true
     }
 
@@ -1364,7 +1364,7 @@ async function routeRequest(io, req, res, pathname, body) {
   if (await handleNotificationRoutes(req, res, pathname, body)) return
   if (await handleSchedulerRoutes(req, res, pathname, body)) return
 
-  error(res, 404, 'NotFoundError', `Route not found: ${pathname}`)
+  sendError(res, 404, 'NotFoundError', `Route not found: ${pathname}`)
 }
 
 async function main() {
