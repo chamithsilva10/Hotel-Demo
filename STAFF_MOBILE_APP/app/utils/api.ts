@@ -19,6 +19,13 @@ function unwrap<T>(payload: any): T {
 }
 
 export const apiClient = {
+  loginStaff: async (payload: { employeeId: string; department: string; password: string }) =>
+    unwrap(
+      await api
+        .post('/api/auth/staff-login', payload)
+        .then((response) => response.data),
+    ),
+
   getRequests: async () => unwrap(await api.get('/api/requests').then((response) => response.data)),
   getMessages: async (conversationId?: string | number) =>
     unwrap(
