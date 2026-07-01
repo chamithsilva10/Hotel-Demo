@@ -76,6 +76,13 @@ class SocketService {
     }
   }
 
+  // Listen for new request creations
+  onRequestCreated(callback: (data: any) => void) {
+    if (this.socket) {
+      this.socket.on('request:created', callback);
+    }
+  }
+
   // Listen for new messages
   onMessageReceived(callback: (data: any) => void) {
     if (this.socket) {
